@@ -64,7 +64,7 @@ public class BroadcastAgent extends Thread {
         while(true)
         {
             
-            for(Message message : qReceive)
+            for(Message<String, Object> message : qReceive)
             {
                 localMemory.store((String)message.getKey(), message.getValue());
             }

@@ -1,8 +1,8 @@
 
 public class TokenRingAgent extends Thread {
-    private final int agentID;
+    protected final int agentID;
     private boolean active = true;
-    private final int cpuID;
+    protected final int cpuID;
     private int predecessorID;
     private int successorID;
     
@@ -66,38 +66,14 @@ public class TokenRingAgent extends Thread {
         }
     }
     
-    
-    /**
-     * Checks to see whether the predecessor id
-     * is not the same as this agents id.
-     * @param id    The unique predecessor agent id.
-     */
-    protected void setPredecessor(int id) throws IllegalArgumentException
+    protected void setPredecessor(int id)
     {
-        if(id == agentID)
-        {
-            throw new IllegalArgumentException();
-        }
-        else
-        {
-            predecessorID = id;
-        }
+        predecessorID = id;
     }
     
-    /**
-     * Checks to see whether the successor id
-     * is not the same as this agents id.
-     * @param id    The unique successor agent id.
-     */
-    protected void setSuccessor(int id) throws IllegalArgumentException
+    
+    protected void setSuccessor(int id)
     {
-        if(id == agentID)
-        {
-            throw new IllegalArgumentException();
-        }
-        else
-        {
-            successorID = id;
-        }
+        successorID = id;
     }
 }
