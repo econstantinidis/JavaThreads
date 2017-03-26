@@ -15,27 +15,14 @@ public class Processor extends Thread {
         //1. start dsm
         dsm.start();
         
-        //2. Create and arrays
-        int[] flag = new int[JavaThreads.testSize - 1];
-        for(int i = 0; i < flag.length; i++)
-        {
-            flag[i] = -1;
-        }
-        
-        int[] turn = new int[JavaThreads.testSize - 2];
-        for(int i = 0; i < turn.length; i++)
-        {
-            turn[i] = -1;
-        }
-        
-        //3. Execute algorithm
+        //2. Execute algorithm
         while(true)
         {
             //<ENTRY SECTION>
             for(int k = 0; k <= JavaThreads.testSize-2; k++)
             {
-                flag[cpuID] = k;
-                turn[k] = cpuID;
+                dsm.store("flag["+ cpuID + "]", k); //flag[cpuID] = k
+                dsm.store("turn["+ k + "]", cpuID); //turn[k] = cpuID;
                 
                 //Concurrency slide 66
                 boolean exists = false;
@@ -46,14 +33,14 @@ public class Processor extends Thread {
                     {
                         if(j != cpuID)
                         {
-                            if(flag[j] >= k)
+                            if((int)dsm.load("flag[" + j + "]") >= k) //flag[j] >= k
                             {
                                 exists = true;
                             }
                         }
                     }
                     
-                }while(exists && turn[k] == cpuID);
+                }while(exists && (int)dsm.load("turn[" + k + "]") == cpuID); //exists && turn[k] == cpuID
             }
                 
             //<CRITICAL SECTION>
@@ -70,7 +57,7 @@ public class Processor extends Thread {
             }
             
             //<EXIT SECTION>
-            flag[cpuID] = -1;
+            dsm.store("flag[" + cpuID + "]", -1); //flag[cpuID] = -1;
         }
     }
 

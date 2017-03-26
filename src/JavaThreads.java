@@ -52,8 +52,16 @@ public class JavaThreads {
     
     private void generateSubSystem(int agentID, int cpuID) throws Exception
     {
-        //1. Create a LocalMemory
+        //1. Create a LocalMemory and initialize Peterson's variables
         LocalMemory localMemory = new LocalMemory();
+        for(int i = 0; i < (JavaThreads.testSize - 1); i++)
+        {
+            localMemory.store("flag[" + i + "]", -1);
+        }
+        for(int i = 0; i < (JavaThreads.testSize - 2); i++)
+        {
+            localMemory.store("turn[" + i + "]", -1);
+        }
         
         //2. Create a BroadcastAgent
         BroadcastAgent broadcastAgent = broadcastSystem.createAgent(false);
