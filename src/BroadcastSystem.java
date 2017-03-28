@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -84,8 +83,9 @@ public class BroadcastSystem extends Thread{
             try 
             {
                 sleep(sleepSeconds * 1000);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
+            }
+            catch (InterruptedException e) 
+            {
                 e.printStackTrace();
             }
             

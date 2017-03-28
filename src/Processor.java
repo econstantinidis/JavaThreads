@@ -22,8 +22,40 @@ public class Processor extends Thread {
             //<ENTRY SECTION>
             for(int k = 0; k <= JavaThreads.testSize-2; k++)
             {
-                dsm.store("flag["+ cpuID + "]", k); //flag[cpuID] = k
-                dsm.store("turn["+ k + "]", cpuID); //turn[k] = cpuID;
+                //flag[cpuID] = k
+                synchronized(lock)
+                {
+                    try 
+                    {
+                        String request = "flag["+ cpuID + "]";
+                        lock.setID(request);
+                        lock.wait();
+                        dsm.store(request, k); //flag[cpuID] = k
+                    } 
+                    catch (InterruptedException e) 
+                    {
+                        e.printStackTrace();
+                    }
+                    
+                }
+                
+                //turn[k] = cpuID;
+                synchronized(lock)
+                {
+                    try 
+                    {
+                        String request = "turn["+ k + "]";
+                        lock.setID(request);
+                        lock.wait();
+                        dsm.store(request, cpuID); //turn[k] = cpuID;
+                    } 
+                    catch (InterruptedException e) 
+                    {
+                        e.printStackTrace();
+                    }
+                    
+                }
+                
                 
                 //Concurrency slide 66
                 boolean exists = false;
@@ -58,7 +90,22 @@ public class Processor extends Thread {
             }
             
             //<EXIT SECTION>
-            dsm.store("flag[" + cpuID + "]", -1); //flag[cpuID] = -1;
+            synchronized(lock)
+            {
+                try 
+                {
+                    String request = "flag[" + cpuID + "]";
+                    lock.setID(request);
+                    lock.wait();
+                    dsm.store(request, -1); //flag[cpuID] = -1;
+                } 
+                catch (InterruptedException e) 
+                {
+                    e.printStackTrace();
+                }
+                
+            }
+            
         }
     }
 

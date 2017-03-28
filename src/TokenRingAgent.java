@@ -37,6 +37,7 @@ public class TokenRingAgent extends Thread {
                 if(token.id == lock.getID() && activeToken == null)
                 {
                     activeToken = token;
+                    lock.notify();
                 }
                 else
                 {
