@@ -75,7 +75,7 @@ public class JavaThreads {
         processorList.add(processor);
         
         //4. Create token ring agent and register it
-        TokenRingAgent tokenRingAgent = new TokenRingAgent(agentID, processor);
+        TokenRingAgent tokenRingAgent = new TokenRingAgent(agentID, processor, 100);
         tokenRing.register(tokenRingAgent);
         
     }

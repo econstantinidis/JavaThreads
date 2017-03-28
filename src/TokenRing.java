@@ -5,10 +5,12 @@ import java.util.List;
 public class TokenRing {
     
     private List<TokenRingAgent> tokenAgentList;
+    private Token token = null;
     
-    protected TokenRing()
+    protected TokenRing(Token token)
     {
         Collections.synchronizedList( new ArrayList<TokenRingAgent>());
+        
     }
     
     protected synchronized void register(TokenRingAgent tokenRingAgent)
@@ -28,5 +30,6 @@ public class TokenRing {
         tokenRingAgent.setSuccessor(headAgent.agentID);
         
     }
+    
 
 }

@@ -1,3 +1,4 @@
+import java.util.concurrent.ArrayBlockingQueue;
 
 public class TokenRingAgent extends Thread {
     protected final int agentID;
@@ -5,7 +6,9 @@ public class TokenRingAgent extends Thread {
     protected final int cpuID;
     private int predecessorID;
     private int successorID;
-    
+    protected ArrayBlockingQueue<Token> tokenBucket;
+    protected Token activeToken = null;
+    protected Lock lock;
     
     /**
      * An agent who holds a token should be allowed to execute privileged instructions.
@@ -13,16 +16,43 @@ public class TokenRingAgent extends Thread {
      * @param agentID   A unique identifier used by the token
      * @param cpuID     A logical identifier for the processor
      */
-    protected TokenRingAgent(int agentID, Processor processor)
+    protected TokenRingAgent(int agentID, Processor processor, int capacity)
     {
         this.agentID = agentID;
         this.cpuID = processor.cpuID;
+        tokenBucket = new ArrayBlockingQueue<Token>(capacity);
+        lock = new Lock();
+        processor.lock = lock;
     }
     
     @Override
     public void run()
     {
-        
+        while(true)
+        {
+            Token token = tokenBucket.poll();   //return head of queue or null
+            if(token != null)
+            {
+                //Check to see if this is the token requested by the processor
+                if(token.id == lock.getID() && activeToken == null)
+                {
+                    activeToken = token;
+                }
+                else
+                {
+                    sendToken(token);
+                }
+            }
+            if(activeToken != null)
+            {
+                //Check to see if processor is done with the token
+                if(activeToken.id != lock.getID())
+                {
+                    sendToken(activeToken);
+                    activeToken = null;
+                }
+            }
+        }
     }
     
     /**

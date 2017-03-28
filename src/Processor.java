@@ -1,6 +1,7 @@
 
 public class Processor extends Thread {
     protected final int cpuID;
+    protected Lock lock;
     private DSM dsm;
     
     protected Processor(int cpuID, DSM dsm)
