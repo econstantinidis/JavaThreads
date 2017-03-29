@@ -1,13 +1,15 @@
 
 public class Processor extends Thread {
     protected final int cpuID;
-    protected Lock lock;
+    protected Lock storeLock;
+    protected Lock loadLock;
     private DSM dsm;
     
     protected Processor(int cpuID, DSM dsm)
     {
         this.cpuID = cpuID;
         this.dsm = dsm;
+        this.loadLock = new Lock();
     }
     
     @Override
@@ -20,41 +22,13 @@ public class Processor extends Thread {
             for(int k = 0; k <= JavaThreads.testSize-2; k++)
             {
                 //flag[cpuID] = k
-                synchronized(lock)
-                {
-                    try 
-                    {
-                        String request = "flag["+ cpuID + "]";
-                        lock.setID(request);
-                        lock.wait();
-                        dsm.store(request, k); //flag[cpuID] = k
-                        lock.done();
-                    } 
-                    catch (InterruptedException e) 
-                    {
-                        e.printStackTrace();
-                    }
-                    
-                }
+                String request = "flag["+ cpuID + "]";
+                store(request, k); //flag[cpuID] = k
+
                 
                 //turn[k] = cpuID;
-                synchronized(lock)
-                {
-                    try 
-                    {
-                        String request = "turn["+ k + "]";
-                        lock.setID(request);
-                        lock.wait();
-                        dsm.store(request, cpuID); //turn[k] = cpuID;
-                        lock.done();
-                    } 
-                    catch (InterruptedException e) 
-                    {
-                        e.printStackTrace();
-                    }
-                    
-                }
-                
+                request = "turn["+ k + "]";
+                store(request, cpuID);
                 
                 //Concurrency slide 66
                 boolean exists = false;
@@ -65,14 +39,16 @@ public class Processor extends Thread {
                     {
                         if(j != cpuID)
                         {
-                            if((int)dsm.load("flag[" + j + "]") >= k) //flag[j] >= k
+                            int value = (int) load("flag[" + j + "]");
+                            int doubleup = value;
+                            if(value >= k) //flag[j] >= k
                             {
                                 exists = true;
                             }
                         }
                     }
                     
-                }while(exists && (int)dsm.load("turn[" + k + "]") == cpuID); //exists && turn[k] == cpuID
+                }while(exists && (int) load("turn[" + k + "]") == cpuID); //exists && turn[k] == cpuID
             }
                 
             //<CRITICAL SECTION>
@@ -89,24 +65,52 @@ public class Processor extends Thread {
             }
             
             //<EXIT SECTION>
-            synchronized(lock)
+            String request = "flag[" + cpuID + "]";
+            store(request, -1);
+        }
+            
+    }
+    
+    private void store(String key, Object value)
+    {
+        synchronized(storeLock)
+        {
+            try 
             {
-                try 
-                {
-                    String request = "flag[" + cpuID + "]";
-                    lock.setID(request);
-                    lock.wait();
-                    dsm.store(request, -1); //flag[cpuID] = -1;
-                    lock.done();
-                } 
-                catch (InterruptedException e) 
-                {
-                    e.printStackTrace();
-                }
-                
+                storeLock.setID(key);
+                storeLock.wait();
+                Message<String, Object> message = new Message<String, Object>(key, value);
+                message.configure(OPCODE.storeBroadcastDSM, this);
+                dsm.commandQueue.put(message);
+                storeLock.done();
+            } 
+            catch (InterruptedException e) 
+            {
+                e.printStackTrace();
             }
             
         }
+    }
+    
+    private <T> T load(String key)
+    {
+        synchronized(loadLock)
+        {
+            try 
+            {
+                loadLock.setID(key);
+                Message<String, Object> message = new Message<String, Object>(key, null);
+                message.configure(OPCODE.loadRequestDSM, this);
+                dsm.commandQueue.put(message);
+                loadLock.wait();
+            } 
+            catch (InterruptedException e) 
+            {
+                e.printStackTrace();
+            }
+            
+        }
+        return (T) loadLock.getValue();
     }
 
 }

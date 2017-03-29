@@ -4,9 +4,8 @@ import java.util.List;
 import java.util.concurrent.*;
 
 public class BroadcastSystem extends Thread{
-    private final int sleepSeconds = 5;
     private final int capacity = 1000;
-    private List<ArrayBlockingQueue<Message<String, Object>>> qList;
+    private List<BroadcastAgent> agentList;
     protected ArrayBlockingQueue<Message<String, Object>> qListen;
     
     /**
@@ -16,47 +15,17 @@ public class BroadcastSystem extends Thread{
      */
     protected BroadcastSystem()
     {
-        qList = Collections.synchronizedList( new ArrayList<ArrayBlockingQueue<Message<String, Object>>>());
-        qListen = new ArrayBlockingQueue<Message<String, Object>>(capacity * 5);
+        agentList = Collections.synchronizedList( new ArrayList<BroadcastAgent>());
+        qListen = new ArrayBlockingQueue<Message<String, Object>>(capacity);
     }
     
-    /**
-     * Multiple agents are prevented from accessing the list of blocking queues.
-     * Offering an message inserts it into the tail of all queues, if the queue is full then
-     * an error message is printed to the console but execution continues 
-     * @param message     The message to be inserted into every queue
-     */
-    private void offerMessage(Message<String, Object> message)
-    {
-        synchronized (qList) //http://docs.oracle.com/javase/7/docs/api/java/util/Collections.html#synchronizedList(java.util.List)
-        {
-            for(ArrayBlockingQueue<Message<String, Object>> queue : qList)
-            {
-                if(queue.offer(message) == false)
-                {
-                    System.out.println(String.format("Failed to add {0} : {1} to broadcast queue because it is full", message.getKey(), message.getValue().getClass().getName()));
-                }
-            }
-        }
-    }
     
-    /**
-     * Thread safe, create and register a message queue and
-     * add it to the synchronized list of outgoing queues.
-     * Only after the queue has successfully been added will
-     * an agent be generated and returned.
-     * @param start     Determines if the agent thread starts immediately
-     * @return          The reference to a new agent
-     */
-    protected BroadcastAgent createAgent(boolean start)
+    
+
+    protected BroadcastAgent createAgent()
     {
-        ArrayBlockingQueue<Message<String, Object>> qBroadcast = new ArrayBlockingQueue<>(capacity); //generate new blocking queue
-        qList.add(qBroadcast); //add to synchronized list, maybe block
-        BroadcastAgent agent = new BroadcastAgent(qBroadcast, qListen); //create new agent
-        if(start)
-        {
-            agent.start();
-        }
+        BroadcastAgent agent = new BroadcastAgent(qListen); //create new agent
+        agentList.add(agent); //add to synchronized list, maybe block
         return agent;
     }
     
@@ -69,26 +38,48 @@ public class BroadcastSystem extends Thread{
     public void run() {
         while(true)
         {
-            //Process the queue
-            while(qListen.isEmpty() == false)
+            Message<String, Object> message = qListen.poll();
+            if(message != null)
             {
-                Message<String, Object> message = qListen.poll();
-                if(message != null)
+                switch (message.opcode)
                 {
-                    offerMessage(message);
+                    case storeBS:
+                        store(message);
+                        break;
+                    case loadBS:
+                        load(message);
+                        break;
+                   default:
+                       System.out.println("Invalid opcode in BroadcastSystem");
                 }
             }
             
-            //Sleep for some time
-            try 
+        }
+    
+    }
+    
+    protected void store(Message<String, Object> message)
+    {
+        message.configure(OPCODE.storeExecuteBA, this);
+        synchronized (agentList) //http://docs.oracle.com/javase/7/docs/api/java/util/Collections.html#synchronizedList(java.util.List)
+        {
+            for(BroadcastAgent agent : agentList)
             {
-                sleep(sleepSeconds * 1000);
+                if(agent.commandQueue.offer(message) == false)
+                {
+                    System.out.println(String.format("Failed to add {0} : {1} to queue because it is full", message.getKey(), message.getValue().getClass().getName()));
+                }
             }
-            catch (InterruptedException e) 
-            {
-                e.printStackTrace();
-            }
-            
+        }
+    }
+    
+    protected void load(Message<String, Object> message)
+    {
+        BroadcastAgent ba = (BroadcastAgent) message.sender;
+        message.configure(OPCODE.loadExecuteBA, this);
+        if(ba.commandQueue.offer(message) == false)
+        {
+            System.out.println(String.format("Failed to add {0} : {1} to queue because it is full", message.getKey(), message.getValue().getClass().getName()));
         }
     }
     

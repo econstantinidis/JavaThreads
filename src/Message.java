@@ -1,18 +1,5 @@
 import java.util.Map.Entry;
 
-enum OPCODE
-{
-    storeBroadcastDSM,
-    storeDSM,
-    loadRequestDSM,
-    loadExecuteDSM,
-    storeBroadcastBA,
-    storeExecuteBA,
-    loadRequestBA,
-    loadExecuteBA,
-    storeBS,
-    loadBS
-}
 public class Message<K, V> implements Entry<K, V> {
     private K key;
     private V value;

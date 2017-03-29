@@ -2,6 +2,8 @@
 
 public class Lock {
     private String id = "done";
+    private Object returnValue = null;
+    
     protected Lock()
     {
         
@@ -20,5 +22,15 @@ public class Lock {
     protected synchronized void done()
     {
         setID("done");
+    }
+    
+    protected synchronized void setReturn(Object value)
+    {
+        this.returnValue = value;
+    }
+    
+    protected synchronized Object getValue()
+    {
+        return this.returnValue;
     }
 }

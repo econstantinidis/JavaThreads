@@ -17,7 +17,6 @@ public class JavaThreads {
             
         }
         tokenRing.createToken("all");
-        wait();
     }
     
     public static void main(String[] args)
@@ -64,21 +63,23 @@ public class JavaThreads {
         }
         
         //2. Create a BroadcastAgent
-        BroadcastAgent broadcastAgent = broadcastSystem.createAgent(false);
-        broadcastAgent.setLocalMemory(localMemory);
-        broadcastAgent.start();
+        BroadcastAgent broadcastAgent = broadcastSystem.createAgent();
         
         //3. Create DSM
         DSM dsm = new DSM(localMemory, broadcastAgent);
-        dsm.start();
+        broadcastAgent.setDSM(dsm);
         
         //3. Generate CPU
         Processor processor = new Processor(cpuID, dsm);
+        dsm.loadLock = processor.loadLock;
         
         //4. Create token ring agent and register it
-        TokenRingAgent tokenRingAgent = new TokenRingAgent(agentID, processor, 100);
+        TokenRingAgent tokenRingAgent = new TokenRingAgent(agentID, processor, 1000);
         
+        //5. start the system components
         tokenRingAgent.start();
+        dsm.start();
+        broadcastAgent.start();
         processor.start();
         
         return tokenRingAgent;

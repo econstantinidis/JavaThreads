@@ -23,13 +23,12 @@ public class TokenRingAgent extends Thread {
         tokenBucket = new ArrayBlockingQueue<Token>(capacity);
         lock = new Lock();
         this.processor = processor;
-        this.processor.lock = lock;
+        this.processor.storeLock = lock;
     }
     
     @Override
     public void run()
     {
-        this.processor.start();
         while(true)
         {
             Token token = tokenBucket.poll();   //return head of queue or null

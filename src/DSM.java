@@ -4,8 +4,8 @@ public class DSM extends Thread {
     
     private LocalMemory localMemory;
     private BroadcastAgent broadcastAgent;
-    private ArrayBlockingQueue<Message<String, Object>> storeQueue; 
-    
+    protected ArrayBlockingQueue<Message<String, Object>> commandQueue; 
+    protected Lock loadLock;
     /**
      * 
      * @param localMemory       The local cache created by the CPU
@@ -15,8 +15,14 @@ public class DSM extends Thread {
     {
         this.localMemory = localMemory;
         this.broadcastAgent = broadcastAgent;
-        this.storeQueue = new ArrayBlockingQueue<Message<String, Object>>(1000);
+        this.commandQueue = new ArrayBlockingQueue<Message<String, Object>>(1000);
     }
+    
+    protected void setLoadLock(Lock loadLock)
+    {
+        this.loadLock = loadLock;
+    }
+    
     
     /**
      * The associated broadcast agent will add this store to the BroadcastSystem action queue
@@ -30,7 +36,7 @@ public class DSM extends Thread {
         try
         {
             //Add the message to the store queue to be processed
-            this.storeQueue.put(message);
+            this.commandQueue.put(message);
         } 
         catch (InterruptedException e) 
         {
@@ -52,15 +58,70 @@ public class DSM extends Thread {
     @Override
     public void run()
     { 
-        Message<String, Object> message = storeQueue.poll();
-        if(message != null)
+        while(true)
         {
-            //Poll the queue
-            localMemory.store(message.getKey(), message.getValue());
+            Message<String, Object> message = commandQueue.poll();
+            if(message != null)
+            {
+                switch (message.opcode)
+                {
+                    case loadRequestDSM:
+                        loadExecute(message);
+                        break;
+                    case loadExecuteDSM:
+                        loadExecute(message);
+                        break;
+                    case storeDSM:
+                        storeBroadcast(message);
+                        break;
+                    case storeBroadcastDSM:
+                        storeExecute(message);
+                        break;
+                   default:
+                       System.out.println("Invalid opcode in BroadcastAgent");
+                }
+            }
             
-            //Perform the store and broadcast
-            localMemory.store(message.getKey(), message.getValue());
-            broadcastAgent.broadcast(message);
         }
+    }
+    
+    protected void loadRequest(Message<String, Object> message)
+    {
+        message.configure(OPCODE.loadRequestBA, this);
+        try 
+        {
+            broadcastAgent.commandQueue.put(message); //blocks if the queue is full
+        } 
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+    }
+    
+    protected void loadExecute(Message<String, Object> message)
+    {
+        synchronized(loadLock)
+        {
+            loadLock.setReturn(localMemory.load(message.getKey()));
+            loadLock.notify();
+        }
+    }
+    
+    protected void storeBroadcast(Message<String, Object> message)
+    {
+        message.configure(OPCODE.storeBroadcastBA, this);
+        try 
+        {
+            broadcastAgent.commandQueue.put(message); //blocks if the queue is full
+        } 
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+    }
+    
+    protected void storeExecute(Message<String, Object> message)
+    {
+        localMemory.store(message.getKey(), message.getValue());
     }
 }

@@ -1,44 +1,19 @@
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class BroadcastAgent extends Thread {
-    private ArrayBlockingQueue<Message<String, Object>> qBroadcast;
-    private ArrayBlockingQueue<Message<String, Object>> qReceive;
-    private LocalMemory localMemory;
+    protected ArrayBlockingQueue<Message<String, Object>> broadcastQueue;
+    protected ArrayBlockingQueue<Message<String, Object>> commandQueue;
+    private DSM dsm;
     
-    /**
-     * Only the BroadcastSystem should be allowed to generate this class.
-     * A new agent can be created via the createAgent function. In doing
-     * so the appropriate communication channels are set up and registered.
-     * @param qRecieve      The queue used to receive messages from the BroadcastSystem 
-     * @param qBroadCast    The queue used to send messages to the BroadcastSystem
-     */
-    protected BroadcastAgent(ArrayBlockingQueue<Message<String, Object>> qReceive, ArrayBlockingQueue<Message<String, Object>> qBroadCast)
+    protected BroadcastAgent(ArrayBlockingQueue<Message<String, Object>> broadcastQueue)
     {
-        this.qBroadcast = qBroadCast;
-        this.qReceive = qReceive;
+        this.broadcastQueue = broadcastQueue;
+        this.commandQueue = new ArrayBlockingQueue<Message<String, Object>>(1000);
     }
     
-    protected void setLocalMemory(LocalMemory localMemory)
+    protected void setDSM(DSM dsm)
     {
-        this.localMemory = localMemory;
-    }
-    /**
-     * Inserts the specified element at the tail of the broadcast queue, 
-     * waiting for space to become available if the queue is full. 
-     * This method is synchronized to prevent the DSM from executing 
-     * multiple broadcasts while this thread is already waiting on the queue.
-     * @param message   The element to insert into the queue.
-     */
-    protected synchronized void broadcast(Message<String, Object> message)
-    {
-        try 
-        {
-            qBroadcast.put(message); //blocks if the queue is full
-        } 
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
+        this.dsm = dsm;
     }
     
     /**
@@ -50,7 +25,7 @@ public class BroadcastAgent extends Thread {
      */
     protected Message<String, Object> receive()
     {
-        return qReceive.poll();
+        return commandQueue.poll();
     }
     
     /**
@@ -63,13 +38,80 @@ public class BroadcastAgent extends Thread {
     {
         while(true)
         {
-            
-            Message<String, Object> message = qReceive.poll();
+            Message<String, Object> message = commandQueue.poll();
             if(message != null)
             {
-                localMemory.store(message.getKey(), message.getValue());
+                switch (message.opcode)
+                {
+                    case loadRequestBA:
+                        loadExecute(message);
+                        break;
+                    case loadExecuteBA:
+                        loadExecute(message);
+                        break;
+                    case storeBroadcastBA:
+                        storeBroadcast(message);
+                        break;
+                    case storeExecuteBA:
+                        storeExecute(message);
+                        break;
+                   default:
+                       System.out.println("Invalid opcode in BroadcastAgent");
+                }
             }
+            
         }
-        
+    }
+    
+    protected synchronized void storeBroadcast(Message<String, Object> message)
+    {
+        message.configure(OPCODE.storeBS, this);
+        try 
+        {
+            broadcastQueue.put(message); //blocks if the queue is full
+        } 
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+    }
+    
+    protected void loadRequest(Message<String, Object> message)
+    {
+        message.configure(OPCODE.loadBS, this);
+        try 
+        {
+            broadcastQueue.put(message); //blocks if the queue is full
+        } 
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+    }
+    
+    protected void loadExecute(Message<String, Object> message)
+    {
+        message.configure(OPCODE.loadExecuteDSM, this);
+        try 
+        {
+            dsm.commandQueue.put(message); //blocks if the queue is full
+        } 
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+    }
+    
+    protected void storeExecute(Message<String, Object> message)
+    {
+        message.configure(OPCODE.storeDSM, this);
+        try 
+        {
+            dsm.commandQueue.put(message); //blocks if the queue is full
+        } 
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
     }
 }
