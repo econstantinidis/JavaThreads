@@ -59,7 +59,7 @@ public class JavaThreads {
         }
         for(int i = 0; i < (JavaThreads.testSize - 1); i++)
         {
-            localMemory.store("turn[" + i + "]", -1);
+            localMemory.store("turn[" + i + "]", 0);
         }
         
         //2. Create a BroadcastAgent
