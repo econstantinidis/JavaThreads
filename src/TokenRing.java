@@ -7,18 +7,24 @@ public class TokenRing {
     private List<TokenRingAgent> tokenAgentList;
     private Token token = null;
     
-    protected TokenRing(String tokenID)
+    protected TokenRing()
     {
-        tokenAgentList = Collections.synchronizedList( new ArrayList<TokenRingAgent>());
-        createToken(tokenID);
-        
+        tokenAgentList = Collections.synchronizedList( new ArrayList<TokenRingAgent>());      
     }
     
     protected synchronized void register(TokenRingAgent tokenRingAgent)
     {
         tokenAgentList.add(tokenRingAgent);
-        tokenRingAgent.predecessor = tokenAgentList.get(tokenAgentList.size() - 2); //last index = size - 1 then -1 for the previous agent
-        tokenRingAgent.successor = tokenAgentList.get(0);
+        if(tokenAgentList.size() == 1)
+        {
+            tokenRingAgent.predecessor = tokenRingAgent; //Only this agent in the list
+            tokenRingAgent.successor = tokenRingAgent;
+        }
+        else
+        {
+            tokenRingAgent.predecessor = tokenAgentList.get(tokenAgentList.size() - 2); //last index = size - 1 then -1 for the previous agent
+            tokenRingAgent.successor = tokenAgentList.get(0);
+        }
     }
     
     protected void createToken(String tokenID)
@@ -26,14 +32,6 @@ public class TokenRing {
         token = new Token();
         token.setID(tokenID);
         tokenAgentList.get(0).tokenBucket.offer(token);
-    }
-    
-    protected void startAgents()
-    {
-        for(TokenRingAgent tokenRingAgent : tokenAgentList)
-        {
-            tokenRingAgent.start();
-        }
     }
 
 }

@@ -39,7 +39,10 @@ public class TokenRingAgent extends Thread {
                 if((token.id == lock.getID() || token.id == "all") && activeToken == null)
                 {
                     activeToken = token;
-                    lock.notify();
+                    synchronized(lock)
+                    {
+                        lock.notify();
+                    }
                 }
                 else
                 {

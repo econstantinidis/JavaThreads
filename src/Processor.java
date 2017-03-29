@@ -13,9 +13,6 @@ public class Processor extends Thread {
     @Override
     public void run()
     {
-        //1. start dsm
-        dsm.start();
-        
         //2. Execute algorithm
         while(true)
         {

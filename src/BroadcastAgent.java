@@ -3,7 +3,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class BroadcastAgent extends Thread {
     private ArrayBlockingQueue<Message<String, Object>> qBroadcast;
     private ArrayBlockingQueue<Message<String, Object>> qReceive;
-    private final int sleepSeconds = 5;
     private LocalMemory localMemory;
     
     /**
@@ -55,8 +54,9 @@ public class BroadcastAgent extends Thread {
     }
     
     /**
-     * TODO
-     * I Dont have anything for this method to do at the moment 
+     * BroadcastAgent will actively process its message queue.
+     * This means that while running, this thread will poll the queue
+     * and perform stores on the local memory cache.
      */
     @Override
     public void run()
@@ -64,17 +64,10 @@ public class BroadcastAgent extends Thread {
         while(true)
         {
             
-            for(Message<String, Object> message : qReceive)
+            Message<String, Object> message = qReceive.poll();
+            if(message != null)
             {
-                localMemory.store((String)message.getKey(), message.getValue());
-            }
-            //Sleep for some time
-            try 
-            {
-                sleep(sleepSeconds * 1000);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                localMemory.store(message.getKey(), message.getValue());
             }
         }
         

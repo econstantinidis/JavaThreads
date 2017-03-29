@@ -1,8 +1,10 @@
+import java.util.concurrent.ArrayBlockingQueue;
 
 public class DSM extends Thread {
     
     private LocalMemory localMemory;
     private BroadcastAgent broadcastAgent;
+    private ArrayBlockingQueue<Message<String, Object>> storeQueue; 
     
     /**
      * 
@@ -13,6 +15,7 @@ public class DSM extends Thread {
     {
         this.localMemory = localMemory;
         this.broadcastAgent = broadcastAgent;
+        this.storeQueue = new ArrayBlockingQueue<Message<String, Object>>(1000);
     }
     
     /**
@@ -22,13 +25,21 @@ public class DSM extends Thread {
      */
     protected void store(String key, Object value)
     {
+        //Create a new message via the arguments
         Message<String, Object> message = new Message<String, Object>(key, value);
-        localMemory.store(key, value);
-        broadcastAgent.broadcast(message);
+        try
+        {
+            //Add the message to the store queue to be processed
+            this.storeQueue.put(message);
+        } 
+        catch (InterruptedException e) 
+        {
+            e.printStackTrace();
+        }
     }
     
     /**
-     * 
+     * Load the Message from 
      * @param key       This parameter is used to retrieve the associated value
      * @return          The associated value is unboxed to the specified type by cast or is null.
      */
@@ -40,7 +51,16 @@ public class DSM extends Thread {
     
     @Override
     public void run()
-    {
-        broadcastAgent.start();
+    { 
+        Message<String, Object> message = storeQueue.poll();
+        if(message != null)
+        {
+            //Poll the queue
+            localMemory.store(message.getKey(), message.getValue());
+            
+            //Perform the store and broadcast
+            localMemory.store(message.getKey(), message.getValue());
+            broadcastAgent.broadcast(message);
+        }
     }
 }
