@@ -1,9 +1,23 @@
 import java.util.Map.Entry;
 
+enum OPCODE
+{
+    storeBroadcastDSM,
+    storeDSM,
+    loadRequestDSM,
+    loadExecuteDSM,
+    storeBroadcastBA,
+    storeExecuteBA,
+    loadRequestBA,
+    loadExecuteBA,
+    storeBS,
+    loadBS
+}
 public class Message<K, V> implements Entry<K, V> {
     private K key;
     private V value;
-
+    protected OPCODE opcode;
+    protected Object sender;
     public Message(K key, V value) {
         this.key = key;
         this.value = value;
@@ -24,6 +38,12 @@ public class Message<K, V> implements Entry<K, V> {
         V old = this.value;
         this.value = value;
         return old;
+    }
+    
+    protected void configure(OPCODE opcode, Object sender)
+    {
+        this.opcode = opcode;
+        this.sender = sender;
     }
 }
 
