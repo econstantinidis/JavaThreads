@@ -39,6 +39,7 @@ public class Processor extends Thread {
                     {
                         if(j != cpuID)
                         {
+                            //System.out.println("Flag was: " + (int) load("flag[" + j + "]"));
                             if((int) load("flag[" + j + "]") >= k) //flag[j] >= k
                             {
                                 exists = true;
@@ -48,6 +49,8 @@ public class Processor extends Thread {
                     }
                     
                 }while(exists && ((int) load("turn[" + k + "]") == cpuID)); //exists && turn[k] == cpuID
+                
+              
             }
                 
             //<CRITICAL SECTION>

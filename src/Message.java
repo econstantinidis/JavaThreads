@@ -5,9 +5,20 @@ public class Message<K, V> implements Entry<K, V> {
     private V value;
     protected OPCODE opcode;
     protected Object sender;
+    
     public Message(K key, V value) {
         this.key = key;
         this.value = value;
+    }
+    
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public Message(Message message)
+    {
+        this.key = (K) message.getKey();
+        this.value = (V) message.getValue();
+        this.opcode = message.opcode;
+        this.sender = message.sender;
     }
     
     @Override
@@ -32,5 +43,6 @@ public class Message<K, V> implements Entry<K, V> {
         this.opcode = opcode;
         this.sender = sender;
     }
+    
 }
 

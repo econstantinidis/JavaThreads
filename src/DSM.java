@@ -72,10 +72,10 @@ public class DSM extends Thread {
                         loadExecute(message);
                         break;
                     case storeDSM:
-                        storeBroadcast(message);
+                        storeExecute(message);
                         break;
                     case storeBroadcastDSM:
-                        storeExecute(message);
+                        storeBroadcast(message);
                         break;
                    default:
                        System.out.println("Invalid opcode in BroadcastAgent");

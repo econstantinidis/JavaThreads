@@ -65,9 +65,10 @@ public class BroadcastSystem extends Thread{
         {
             for(BroadcastAgent agent : agentList)
             {
-                if(agent.commandQueue.offer(message) == false)
+                Message<String, Object> copy = new Message<String, Object>(message);
+                if(agent.commandQueue.offer(copy) == false)
                 {
-                    System.out.println(String.format("Failed to add {0} : {1} to queue because it is full", message.getKey(), message.getValue().getClass().getName()));
+                    System.out.println(String.format("Failed to add {0} : {1} to queue because it is full", copy.getKey(), copy.getValue().getClass().getName()));
                 }
             }
         }
@@ -83,8 +84,4 @@ public class BroadcastSystem extends Thread{
         }
     }
     
-    
-    
-      
-
 }
