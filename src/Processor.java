@@ -49,7 +49,7 @@ public class Processor extends Thread {
                     }
                     
                 }while(exists && ((int) load("turn[" + k + "]") == cpuID)); //exists && turn[k] == cpuID
-                
+                System.out.println("CPU: " + cpuID + " -> " + (int)load("turn[" + k + "]"));
               
             }
                 
