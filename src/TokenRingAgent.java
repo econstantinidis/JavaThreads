@@ -4,12 +4,12 @@ public class TokenRingAgent extends Thread {
     protected final int agentID;
     private boolean active = true;
     protected final int cpuID;
-    private int predecessorID;
-    private int successorID;
+    protected TokenRingAgent predecessor;
+    protected TokenRingAgent successor;
     protected ArrayBlockingQueue<Token> tokenBucket;
     protected Token activeToken = null;
     protected Lock lock;
-    
+    protected Processor processor;
     /**
      * An agent who holds a token should be allowed to execute privileged instructions.
      * Initially the agent is set to active but this can be toggled using the methods.
@@ -22,19 +22,21 @@ public class TokenRingAgent extends Thread {
         this.cpuID = processor.cpuID;
         tokenBucket = new ArrayBlockingQueue<Token>(capacity);
         lock = new Lock();
-        processor.lock = lock;
+        this.processor = processor;
+        this.processor.lock = lock;
     }
     
     @Override
     public void run()
     {
+        this.processor.start();
         while(true)
         {
             Token token = tokenBucket.poll();   //return head of queue or null
             if(token != null)
             {
                 //Check to see if this is the token requested by the processor
-                if(token.id == lock.getID() && activeToken == null)
+                if((token.id == lock.getID() || token.id == "all") && activeToken == null)
                 {
                     activeToken = token;
                     lock.notify();
@@ -59,17 +61,26 @@ public class TokenRingAgent extends Thread {
     /**
      * @returns     The unique identifier for the token received from the predecessor
      */
-    protected int receiveToken()
+    protected String receiveToken()
     {
-        return agentID;
+        return activeToken.getID();
     }
     
     /**
+     * Inserts the token into the tail of the successor's token queue.
+     * This method will block if space is not immediately available.
      * @param token     token sent to the successor
      */
     protected void sendToken(Token token)
     {
-        
+        try 
+        {
+            successor.tokenBucket.put(token);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -97,14 +108,19 @@ public class TokenRingAgent extends Thread {
         }
     }
     
-    protected void setPredecessor(int id)
+    protected int getPredecessorID()
     {
-        predecessorID = id;
+        return predecessor.getID();
     }
     
     
-    protected void setSuccessor(int id)
+    protected int getSuccessorID()
     {
-        successorID = id;
+        return successor.getID();
+    }
+    
+    protected int getID()
+    {
+        return this.agentID;
     }
 }

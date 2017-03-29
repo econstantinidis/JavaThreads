@@ -1,21 +1,19 @@
-import java.util.ArrayList;
-import java.util.List;
 
 public class JavaThreads {
     
     private BroadcastSystem broadcastSystem;
     private TokenRing tokenRing;
-    private List<Processor> processorList;
     protected static int testSize;
     
     public JavaThreads(int numAgents) throws Exception
     {
         testSize = numAgents;
-        processorList = new ArrayList<Processor>();
         broadcastSystem = new BroadcastSystem();
+        this.tokenRing = new TokenRing("all");
         for(int i = 0; i < numAgents; i++)
         {
-            generateSubSystem(i, i);
+            this.tokenRing.register(generateSubSystem(i, i));
+            
         }
         startSystemsRecursive();
         wait();
@@ -24,10 +22,7 @@ public class JavaThreads {
     private void startSystemsRecursive()
     {
         broadcastSystem.start();
-        for(Processor processor : processorList)
-        {
-            processor.start(); // Processor -> DSM -> BroadcastAgent
-        }
+        tokenRing.startAgents(); // Agent -> Processor -> DSM -> BroadcastAgent
     }
     
     public static void main(String[] args) {
@@ -50,7 +45,7 @@ public class JavaThreads {
         }
     }
     
-    private void generateSubSystem(int agentID, int cpuID) throws Exception
+    private TokenRingAgent generateSubSystem(int agentID, int cpuID) throws Exception
     {
         //1. Create a LocalMemory and initialize Peterson's variables
         LocalMemory localMemory = new LocalMemory();
@@ -72,11 +67,10 @@ public class JavaThreads {
         
         //3. Generate CPU
         Processor processor = new Processor(cpuID, dsm);
-        processorList.add(processor);
         
         //4. Create token ring agent and register it
         TokenRingAgent tokenRingAgent = new TokenRingAgent(agentID, processor, 100);
-        tokenRing.register(tokenRingAgent);
+        return tokenRingAgent;
         
     }
     

@@ -31,6 +31,7 @@ public class Processor extends Thread {
                         lock.setID(request);
                         lock.wait();
                         dsm.store(request, k); //flag[cpuID] = k
+                        lock.done();
                     } 
                     catch (InterruptedException e) 
                     {
@@ -48,6 +49,7 @@ public class Processor extends Thread {
                         lock.setID(request);
                         lock.wait();
                         dsm.store(request, cpuID); //turn[k] = cpuID;
+                        lock.done();
                     } 
                     catch (InterruptedException e) 
                     {
@@ -98,6 +100,7 @@ public class Processor extends Thread {
                     lock.setID(request);
                     lock.wait();
                     dsm.store(request, -1); //flag[cpuID] = -1;
+                    lock.done();
                 } 
                 catch (InterruptedException e) 
                 {
