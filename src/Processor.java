@@ -19,7 +19,7 @@ public class Processor extends Thread {
         while(true)
         {
             //<ENTRY SECTION>
-            for(int k = 0; k <= JavaThreads.testSize-2; k++)
+            for(int k = 0; k < JavaThreads.testSize-1; k++)
             {
                 //flag[cpuID] = k
                 String request = "flag["+ cpuID + "]";
@@ -39,24 +39,23 @@ public class Processor extends Thread {
                     {
                         if(j != cpuID)
                         {
-                            int value = (int) load("flag[" + j + "]");
-                            int doubleup = value;
-                            if(value >= k) //flag[j] >= k
+                            if((int) load("flag[" + j + "]") >= k) //flag[j] >= k
                             {
                                 exists = true;
+                                break;
                             }
                         }
                     }
                     
-                }while(exists && (int) load("turn[" + k + "]") == cpuID); //exists && turn[k] == cpuID
+                }while(exists && ((int) load("turn[" + k + "]") == cpuID)); //exists && turn[k] == cpuID
             }
                 
             //<CRITICAL SECTION>
             try
             {
-                System.out.println(String.format("Processor {0} entering the critical section!", cpuID));
+                System.out.println("Processor " + cpuID + " entering the critical section!");
                 Thread.sleep(5000);
-                System.out.println(String.format("Processor {0} leaving the critical section!", cpuID));
+                System.out.println("Processor " + cpuID + " leaving the critical section!");
             }
             catch (InterruptedException e)
             {
@@ -103,14 +102,20 @@ public class Processor extends Thread {
                 message.configure(OPCODE.loadRequestDSM, this);
                 dsm.commandQueue.put(message);
                 loadLock.wait();
+                T value = (T) loadLock.getValue();
+                return value;
             } 
             catch (InterruptedException e) 
             {
+                System.out.println("I am interuppted");
                 e.printStackTrace();
             }
             
         }
-        return (T) loadLock.getValue();
+        
+        //else return null;
+        System.out.print("hit null");
+        return null;
     }
 
 }

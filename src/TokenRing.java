@@ -22,7 +22,9 @@ public class TokenRing {
         }
         else
         {
-            tokenRingAgent.predecessor = tokenAgentList.get(tokenAgentList.size() - 2); //last index = size - 1 then -1 for the previous agent
+            TokenRingAgent predecessor = tokenAgentList.get(tokenAgentList.size() - 2); //last index = size - 1 then -1 for the previous agent
+            predecessor.successor = tokenRingAgent; 
+            tokenRingAgent.predecessor = predecessor;
             tokenRingAgent.successor = tokenAgentList.get(0);
         }
     }

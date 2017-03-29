@@ -53,11 +53,11 @@ public class JavaThreads {
     {
         //1. Create a LocalMemory and initialize Peterson's variables
         LocalMemory localMemory = new LocalMemory();
-        for(int i = 0; i < (JavaThreads.testSize - 1); i++)
+        for(int i = 0; i < (JavaThreads.testSize); i++)
         {
             localMemory.store("flag[" + i + "]", -1);
         }
-        for(int i = 0; i < (JavaThreads.testSize - 2); i++)
+        for(int i = 0; i < (JavaThreads.testSize - 1); i++)
         {
             localMemory.store("turn[" + i + "]", -1);
         }
