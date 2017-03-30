@@ -66,7 +66,7 @@ public class DSM extends Thread {
                 switch (message.opcode)
                 {
                     case loadRequestDSM:
-                        loadExecute(message);
+                        loadRequest(message);
                         break;
                     case loadExecuteDSM:
                         loadExecute(message);

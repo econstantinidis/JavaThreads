@@ -44,7 +44,7 @@ public class BroadcastAgent extends Thread {
                 switch (message.opcode)
                 {
                     case loadRequestBA:
-                        loadExecute(message);
+                        loadRequest(message);
                         break;
                     case loadExecuteBA:
                         loadExecute(message);

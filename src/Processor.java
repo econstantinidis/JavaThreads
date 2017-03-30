@@ -29,7 +29,7 @@ public class Processor extends Thread {
                 //turn[k] = cpuID;
                 request = "turn["+ k + "]";
                 store(request, cpuID);
-                
+                int turnValue;
                 //Concurrency slide 66
                 boolean exists = false;
                 do
@@ -47,9 +47,9 @@ public class Processor extends Thread {
                             }
                         }
                     }
-                    
-                }while(exists && ((int) load("turn[" + k + "]") == cpuID)); //exists && turn[k] == cpuID
-                System.out.println("CPU: " + cpuID + " -> " + (int)load("turn[" + k + "]"));
+                    turnValue = load("turn[" + k + "]");
+                }while(exists && turnValue == cpuID); //exists && turn[k] == cpuID
+                System.out.println("CPU: " + cpuID + " || Turn: " + turnValue + " || Exists: " + exists + " || Level: " + k);
               
             }
                 
