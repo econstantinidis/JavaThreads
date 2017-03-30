@@ -4,6 +4,7 @@ public class Processor extends Thread {
     protected Lock storeLock;
     protected Lock loadLock;
     private DSM dsm;
+    private boolean noRing = false;
     
     protected Processor(int cpuID, DSM dsm)
     {
@@ -75,7 +76,7 @@ public class Processor extends Thread {
     
     private void store(String key, Object value)
     {
-
+/*
         synchronized(storeLock) {
 
             try {
@@ -92,8 +93,8 @@ public class Processor extends Thread {
             }
         }
 
-
-/*        try
+*/
+        try
         {
         Message<String, Object> message = new Message<String, Object>(key, value);
         message.configure(OPCODE.storeBroadcastDSM, this);
@@ -103,14 +104,11 @@ public class Processor extends Thread {
         {
             e.printStackTrace();
         }
-*/
-
-
     }
     
     private <T> T load(String key)
     {
-/*
+
         synchronized(loadLock)
         {
             try 
@@ -119,6 +117,10 @@ public class Processor extends Thread {
                 Message<String, Object> message = new Message<String, Object>(key, null);
                 message.configure(OPCODE.loadRequestDSM, this);
                 dsm.commandQueue.put(message);
+                if(noRing == true)
+                {
+                    return (T)dsm.loadRAW(key);
+                }
                 loadLock.wait();
                 T value = (T) loadLock.getValue();
                 return value;
@@ -134,9 +136,7 @@ public class Processor extends Thread {
         //else return null;
         System.out.print("hit null");
         return null;
-*/
 
-        return (T) dsm.loadRAW(key);
     }
 
 }

@@ -75,6 +75,7 @@ public class BroadcastSystem extends Thread{
     
     protected void load(Message<String, Object> message)
     {
+        
         BroadcastAgent ba = (BroadcastAgent) message.sender;
         message.configure(OPCODE.loadExecuteBA, this);
         if(ba.commandQueue.offer(message) == false)
