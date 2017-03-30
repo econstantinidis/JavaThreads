@@ -63,12 +63,11 @@ public class BroadcastSystem extends Thread{
         message.configure(OPCODE.storeExecuteBA, this);
         synchronized (agentList) //http://docs.oracle.com/javase/7/docs/api/java/util/Collections.html#synchronizedList(java.util.List)
         {
-            for(BroadcastAgent agent : agentList)
-            {
-                Message<String, Object> copy = new Message<String, Object>(message);
-                if(agent.commandQueue.offer(copy) == false)
-                {
-                    System.out.println(String.format("Failed to add {0} : {1} to queue because it is full", copy.getKey(), copy.getValue().getClass().getName()));
+            for(BroadcastAgent agent : agentList) {
+                if (!agent.equals(message.sender)) {
+                    Message<String, Object> copy = new Message<String, Object>(message);
+                    //System.out.println("found copy");
+                    agent.commandQueue.offer(copy);
                 }
             }
         }

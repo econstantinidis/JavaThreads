@@ -49,7 +49,7 @@ public class Processor extends Thread {
                     }
                     turnValue = load("turn[" + k + "]");
                 }while(exists && turnValue == cpuID); //exists && turn[k] == cpuID
-                System.out.println("CPU: " + cpuID + " || Turn: " + turnValue + " || Exists: " + exists + " || Level: " + k);
+                //System.out.println("CPU: " + cpuID + " || Turn: " + turnValue + " || Exists: " + exists + " || Level: " + k);
               
             }
                 
@@ -75,27 +75,42 @@ public class Processor extends Thread {
     
     private void store(String key, Object value)
     {
-        synchronized(storeLock)
-        {
-            try 
-            {
+
+        synchronized(storeLock) {
+
+            try {
                 storeLock.setID(key);
+                //System.out.println("Processor " + cpuID + " has lock");
                 storeLock.wait();
                 Message<String, Object> message = new Message<String, Object>(key, value);
                 message.configure(OPCODE.storeBroadcastDSM, this);
                 dsm.commandQueue.put(message);
                 storeLock.done();
-            } 
-            catch (InterruptedException e) 
-            {
+                //System.out.println("Processor " + cpuID + " gives up lock");
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            
         }
+
+
+/*        try
+        {
+        Message<String, Object> message = new Message<String, Object>(key, value);
+        message.configure(OPCODE.storeBroadcastDSM, this);
+        dsm.commandQueue.put(message);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+*/
+
+
     }
     
     private <T> T load(String key)
     {
+/*
         synchronized(loadLock)
         {
             try 
@@ -119,6 +134,9 @@ public class Processor extends Thread {
         //else return null;
         System.out.print("hit null");
         return null;
+*/
+
+        return (T) dsm.loadRAW(key);
     }
 
 }

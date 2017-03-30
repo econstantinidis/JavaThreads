@@ -112,6 +112,7 @@ public class DSM extends Thread {
         message.configure(OPCODE.storeBroadcastBA, this);
         try 
         {
+            localMemory.store(message.getKey(), message.getValue());
             broadcastAgent.commandQueue.put(message); //blocks if the queue is full
         } 
         catch (InterruptedException e)
@@ -123,5 +124,15 @@ public class DSM extends Thread {
     protected void storeExecute(Message<String, Object> message)
     {
         localMemory.store(message.getKey(), message.getValue());
+    }
+
+    public Object loadRAW(String key)
+    {
+        try {
+            sleep(10);
+        }
+        catch(Exception e)
+        {}
+        return localMemory.load(key);
     }
 }
